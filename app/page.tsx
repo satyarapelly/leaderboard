@@ -1,73 +1,54 @@
-import { createClient } from "@/lib/supabase/server";
+"use client";
 
-type Row = {
-  location_id: string;
-  mandal: string;
-  contacts: number;
-  activities_done: number;
-  programs_running: number;
-  beneficiaries_reached: number;
-  coverage_score: number;
-};
+import { useState } from "react";
+import { ArrowUpRight, CalendarDays, ChevronRight, CircleDollarSign, Flame, HeartPulse, MapPin, MoreHorizontal, Plus, Search, Sparkles, Trophy, UserRoundPlus, Users } from "lucide-react";
 
-export default async function Dashboard() {
-  let rows: Row[] = [];
-  let error: string | null = null;
+const mandals = [
+  { name: "Kagaznagar", score: 91, contacts: 342, activities: 28, programs: 4, reached: "3.8k", color: "#e85d3f" },
+  { name: "Sirpur (T)", score: 78, contacts: 286, activities: 22, programs: 3, reached: "2.9k", color: "#f19a50" },
+  { name: "Kouthala", score: 66, contacts: 194, activities: 19, programs: 3, reached: "2.1k", color: "#eebd54" },
+  { name: "Bejjur", score: 54, contacts: 161, activities: 14, programs: 2, reached: "1.6k", color: "#71aa84" },
+  { name: "Dahegaon", score: 47, contacts: 128, activities: 11, programs: 2, reached: "1.1k", color: "#78a7a2" },
+  { name: "Penchikalpet", score: 32, contacts: 82, activities: 7, programs: 1, reached: "640", color: "#8f9daf" },
+  { name: "Chintalamanepally", score: 21, contacts: 51, activities: 4, programs: 1, reached: "310", color: "#a8a8ad" },
+];
 
-  try {
-    const supabase = createClient();
-    const { data, error: e } = await supabase
-      .from("mandal_coverage")
-      .select("*")
-      .order("coverage_score", { ascending: false });
-    if (e) error = e.message;
-    else rows = (data as Row[]) ?? [];
-  } catch (err: any) {
-    error = err?.message ?? "Supabase not configured yet — see SETUP.md";
-  }
+const kpis = [
+  { label: "Funds mobilized", value: "₹2.84 Cr", note: "71% of ₹4 Cr goal", pct: 71, icon: CircleDollarSign, tone: "coral" },
+  { label: "People reached", value: "12,450", note: "+1,240 this month", pct: 83, icon: HeartPulse, tone: "green" },
+  { label: "Contact pool", value: "1,244", note: "+86 this week", pct: 62, icon: Users, tone: "blue" },
+  { label: "Field activities", value: "32", note: "This month · 7 day streak", pct: 80, icon: CalendarDays, tone: "gold" },
+];
 
-  return (
-    <div>
-      <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--navy)" }}>
-        Mission 2028 — Command Center
-      </h1>
-      <p style={{ color: "#666", marginTop: 4 }}>
-        Mandal coverage leaderboard. Toggle to state scope and full modules to come (see README).
-      </p>
+export default function Dashboard() {
+  const [scope, setScope] = useState("Constituency");
+  return <div className="dashboard-shell">
+    <header className="topbar">
+      <div className="brand"><div className="brand-mark">M<span>28</span></div><div><strong>Mission 2028</strong><small>Command center</small></div></div>
+      <div className="top-actions"><button className="search"><Search size={17}/> Search anything <kbd>⌘ K</kbd></button><button className="icon-button"><CalendarDays size={18}/><i/></button><div className="avatar">AK</div></div>
+    </header>
 
-      <h2 style={{ marginTop: 28, fontSize: 18, color: "var(--navy)" }}>
-        Mandal coverage leaderboard
-      </h2>
+    <main>
+      <section className="welcome">
+        <div><p className="eyebrow"><Sparkles size={14}/> Saturday, 13 June</p><h1>Good morning, <em>Arun.</em></h1><p>Every conversation moves the mission forward. Here’s today’s pulse.</p></div>
+        <div className="welcome-actions"><div className="scope-toggle">{["Constituency","State"].map(x=><button key={x} onClick={()=>setScope(x)} className={scope===x?"active":""}>{x}</button>)}</div><button className="primary"><Plus size={18}/> Add contact</button></div>
+      </section>
 
-      {error && (
-        <div style={{ marginTop: 12, padding: 12, background: "#fff4e5", borderRadius: 8 }}>
-          Could not load data: {error}. Run the migration + seed and set <code>.env.local</code> (see SETUP.md).
-        </div>
-      )}
+      <section className="kpi-grid">{kpis.map(({icon:Icon,...k})=><article className={`kpi ${k.tone}`} key={k.label}><div className="kpi-head"><span><Icon size={18}/></span><small><ArrowUpRight size={13}/> 12.4%</small></div><p>{k.label}</p><h2>{k.value}</h2><div className="progress"><i style={{width:`${k.pct}%`}}/></div><footer>{k.note}<b>{k.pct}%</b></footer></article>)}</section>
 
-      <ol style={{ marginTop: 12, listStyle: "none", padding: 0 }}>
-        {rows.map((r, i) => {
-          const max = rows[0]?.coverage_score || 1;
-          const pct = Math.max(4, Math.round((r.coverage_score / max) * 100));
-          return (
-            <li key={r.location_id} style={{ margin: "8px 0", padding: 12, background: "#fff", borderRadius: 10, boxShadow: "0 1px 2px rgba(0,0,0,0.06)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <strong>{i + 1}. {r.mandal}</strong>
-                <span style={{ color: "var(--gold)", fontWeight: 700 }}>{Math.round(r.coverage_score)}</span>
-              </div>
-              <div style={{ height: 6, background: "#eee", borderRadius: 4, marginTop: 8 }}>
-                <div style={{ width: pct + "%", height: 6, background: "var(--navy)", borderRadius: 4 }} />
-              </div>
-              <div style={{ fontSize: 12, color: "#777", marginTop: 6 }}>
-                {r.contacts} contacts · {r.activities_done} activities · {r.programs_running} programs · {r.beneficiaries_reached} reached
-              </div>
-            </li>
-          );
-        })}
-        {rows.length === 0 && !error && (
-          <li style={{ color: "#777" }}>No data yet — add contacts, activities and programs to populate the leaderboard.</li>
-        )}
-      </ol>
-    </div>
-  );
+      <section className="content-grid">
+        <article className="panel leaderboard">
+          <div className="panel-head"><div><p className="eyebrow"><Trophy size={14}/> Coverage leaderboard</p><h2>{scope === "Constituency" ? "Mandal momentum" : "District momentum"}</h2></div><button className="text-button">View details <ChevronRight size={15}/></button></div>
+          <div className="leader-list">{mandals.map((m,i)=><div className={`leader-row ${i>4?"gap":""}`} key={m.name}><b className="rank">{i+1}</b><div className="leader-main"><div className="leader-title"><strong>{m.name}</strong><span>{i===0&&<small>Leading</small>}<b>{m.score}</b></span></div><div className="bar"><i style={{width:`${m.score}%`,background:m.color}}/></div><p>{m.contacts} contacts <span/> {m.activities} activities <span/> {m.programs} programs <span/> {m.reached} reached</p></div></div>)}</div>
+        </article>
+
+        <aside className="side-stack">
+          <article className="panel focus"><div className="panel-head"><div><p className="eyebrow"><MapPin size={14}/> Focus next</p><h2>Close the coverage gap</h2></div><button className="more"><MoreHorizontal/></button></div><div className="focus-card"><div className="map-pin"><MapPin size={20}/></div><div><strong>Chintalamanepally</strong><p>Lowest coverage · 21 score</p></div><ChevronRight size={18}/></div><div className="tasks"><p><i/> Meet 3 community leaders <b>0/3</b></p><p><i/> Schedule health camp <b>Due Fri</b></p><p><i/> Add village coordinator <b>Open</b></p></div><button className="outline">Plan a field visit <ArrowUpRight size={15}/></button></article>
+          <article className="panel streak"><div className="flame"><Flame size={28}/></div><div><p>Field momentum</p><h2>7 week streak</h2><small>Best streak yet — keep showing up.</small></div><div className="week">{[1,2,3,4,5,6,7].map(x=><i key={x}>{x<7?"✓":""}</i>)}</div></article>
+          <article className="panel follow"><div className="panel-head"><div><p className="eyebrow"><UserRoundPlus size={14}/> Follow-ups</p><h2>5 due today</h2></div><span className="badge">2 overdue</span></div><div className="people"><span>RS</span><span>VK</span><span>SM</span><span>+2</span></div><button className="outline">Open follow-up list <ChevronRight size={15}/></button></article>
+        </aside>
+      </section>
+    </main>
+    <nav className="mobile-nav"><button className="active"><Trophy/>Home</button><button><Users/>Contacts</button><button className="nav-add"><Plus/></button><button><CircleDollarSign/>Funding</button><button><MoreHorizontal/>More</button></nav>
+  </div>
 }
