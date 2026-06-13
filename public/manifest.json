@@ -1,0 +1,10 @@
+{
+  "name": "Mission 2028 Command Center",
+  "short_name": "Mission 2028",
+  "description": "Field-ready tracker for the Sirpur Kaghaznagar mission",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1F3864",
+  "icons": []
+}
