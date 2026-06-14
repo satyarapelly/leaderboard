@@ -174,3 +174,7 @@ update profiles set role = 'owner' where id = '<auth-user-uuid>';
 ```
 
 Start the app with `npm run dev`, open `/contacts` or `/planner`, and sign in with that Supabase Authentication email/password. Contacts and daily plan items then read/write the hosted database and update through Realtime.
+
+## Planner route does not open
+
+If `/planner` shows a Supabase configuration warning, create `.env.local` in the repository root with `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, then completely stop and restart `npm run dev`. Next.js reads public environment variables only when the process starts. Do not use `DATABASE_URL` in place of these API values.
