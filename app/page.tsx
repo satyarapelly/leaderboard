@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, CalendarDays, ChevronRight, CircleDollarSign, Flame, HeartPulse, MapPin, MoreHorizontal, Plus, Search, Sparkles, Trophy, UserRoundPlus, Users } from "lucide-react";
+import { AlertCircle, ArrowUpRight, Bell, Clock3, CalendarDays, ChevronRight, CircleDollarSign, Flame, HeartPulse, MapPin, MoreHorizontal, Plus, Search, Sparkles, Trophy, UserRoundPlus, Users } from "lucide-react";
 
 const mandals = [
   { name: "Kagaznagar", score: 91, contacts: 342, activities: 28, programs: 4, reached: "3.8k", color: "#e85d3f" },
@@ -20,18 +20,31 @@ const kpis = [
   { label: "Field activities", value: "32", note: "This month · 7 day streak", pct: 80, icon: CalendarDays, tone: "gold" },
 ];
 
+const alerts = [
+  { tone: "high", label: "Follow-up overdue", detail: "Call Rajesh Sharma · due yesterday", meta: "Contact", icon: AlertCircle },
+  { tone: "high", label: "Activity overdue", detail: "Village health camp · mark done?", meta: "Activity", icon: CalendarDays },
+  { tone: "medium", label: "Funding is getting stale", detail: "SCCL health van · 24 days in Submitted", meta: "Funding", icon: Clock3 },
+  { tone: "info", label: "Upcoming tomorrow", detail: "Meet Bejjur community leaders", meta: "Activity", icon: CalendarDays },
+];
+
 export default function Dashboard() {
   const [scope, setScope] = useState("Constituency");
+  const today = new Intl.DateTimeFormat("en-IN", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
   return <div className="dashboard-shell">
     <header className="topbar">
       <div className="brand"><div className="brand-mark">M<span>28</span></div><div><strong>Mission 2028</strong><small>Command center</small></div></div>
-      <div className="top-actions"><button className="search"><Search size={17}/> Search anything <kbd>⌘ K</kbd></button><button className="icon-button"><CalendarDays size={18}/><i/></button><div className="avatar">AK</div></div>
+      <div className="top-actions"><button className="search"><Search size={17}/> Search anything <kbd>⌘ K</kbd></button><button className="icon-button bell" aria-label="4 unread notifications"><Bell size={18}/><b>4</b></button><div className="avatar">AK</div></div>
     </header>
 
     <main>
       <section className="welcome">
-        <div><p className="eyebrow"><Sparkles size={14}/> Saturday, 13 June</p><h1>Good morning, <em>Arun.</em></h1><p>Every conversation moves the mission forward. Here’s today’s pulse.</p></div>
+        <div><p className="eyebrow"><Sparkles size={14}/> {today}</p><h1>Good morning, <em>Arun.</em></h1><p>Every conversation moves the mission forward. Here’s today’s pulse.</p></div>
         <div className="welcome-actions"><div className="scope-toggle">{["Constituency","State"].map(x=><button key={x} onClick={()=>setScope(x)} className={scope===x?"active":""}>{x}</button>)}</div><button className="primary"><Plus size={18}/> Add contact</button></div>
+      </section>
+
+      <section className="attention panel">
+        <div className="panel-head"><div><p className="eyebrow"><Bell size={14}/> Needs attention</p><h2>Four things to move today</h2></div><button className="text-button">View all <ChevronRight size={15}/></button></div>
+        <div className="alert-grid">{alerts.map(({icon:Icon,...alert})=><button className={`alert-item ${alert.tone}`} key={alert.detail}><span><Icon size={17}/></span><div><small>{alert.label}</small><strong>{alert.detail}</strong><em>{alert.meta}</em></div><ChevronRight size={16}/></button>)}</div>
       </section>
 
       <section className="kpi-grid">{kpis.map(({icon:Icon,...k})=><article className={`kpi ${k.tone}`} key={k.label}><div className="kpi-head"><span><Icon size={18}/></span><small><ArrowUpRight size={13}/> 12.4%</small></div><p>{k.label}</p><h2>{k.value}</h2><div className="progress"><i style={{width:`${k.pct}%`}}/></div><footer>{k.note}<b>{k.pct}%</b></footer></article>)}</section>
