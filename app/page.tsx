@@ -47,6 +47,11 @@ export default function Dashboard() {
         <div className="alert-grid">{alerts.map(({icon:Icon,...alert})=><button className={`alert-item ${alert.tone}`} key={alert.detail}><span><Icon size={17}/></span><div><small>{alert.label}</small><strong>{alert.detail}</strong><em>{alert.meta}</em></div><ChevronRight size={16}/></button>)}</div>
       </section>
 
+      <section className="attention panel">
+        <div className="panel-head"><div><p className="eyebrow"><Bell size={14}/> Needs attention</p><h2>Four things to move today</h2></div><button className="text-button">View all <ChevronRight size={15}/></button></div>
+        <div className="alert-grid">{alerts.map(({icon:Icon,...alert})=><button className={`alert-item ${alert.tone}`} key={alert.detail}><span><Icon size={17}/></span><div><small>{alert.label}</small><strong>{alert.detail}</strong><em>{alert.meta}</em></div><ChevronRight size={16}/></button>)}</div>
+      </section>
+
       <section className="kpi-grid">{kpis.map(({icon:Icon,...k})=><article className={`kpi ${k.tone}`} key={k.label}><div className="kpi-head"><span><Icon size={18}/></span><small><ArrowUpRight size={13}/> 12.4%</small></div><p>{k.label}</p><h2>{k.value}</h2><div className="progress"><i style={{width:`${k.pct}%`}}/></div><footer>{k.note}<b>{k.pct}%</b></footer></article>)}</section>
 
       <section className="content-grid">
