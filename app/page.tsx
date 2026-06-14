@@ -39,7 +39,12 @@ export default function Dashboard() {
     <main>
       <section className="welcome">
         <div><p className="eyebrow"><Sparkles size={14}/> {today}</p><h1>Good morning, <em>Arun.</em></h1><p>Every conversation moves the mission forward. Here’s today’s pulse.</p></div>
-        <div className="welcome-actions"><div className="scope-toggle">{["Constituency","State"].map(x=><button key={x} onClick={()=>setScope(x)} className={scope===x?"active":""}>{x}</button>)}</div><button className="primary"><Plus size={18}/> Add contact</button></div>
+        <div className="welcome-actions"><div className="scope-toggle">{["Constituency","State"].map(x=><button key={x} onClick={()=>setScope(x)} className={scope===x?"active":""}>{x}</button>)}</div><a className="primary" href="/contacts?add=1"><Plus size={18}/> Add contact</a></div>
+      </section>
+
+      <section className="attention panel">
+        <div className="panel-head"><div><p className="eyebrow"><Bell size={14}/> Needs attention</p><h2>Four things to move today</h2></div><button className="text-button">View all <ChevronRight size={15}/></button></div>
+        <div className="alert-grid">{alerts.map(({icon:Icon,...alert})=><button className={`alert-item ${alert.tone}`} key={alert.detail}><span><Icon size={17}/></span><div><small>{alert.label}</small><strong>{alert.detail}</strong><em>{alert.meta}</em></div><ChevronRight size={16}/></button>)}</div>
       </section>
 
       <section className="attention panel">
@@ -62,6 +67,6 @@ export default function Dashboard() {
         </aside>
       </section>
     </main>
-    <nav className="mobile-nav"><button className="active"><Trophy/>Home</button><button><Users/>Contacts</button><button className="nav-add"><Plus/></button><button><CircleDollarSign/>Funding</button><button><MoreHorizontal/>More</button></nav>
+    <nav className="mobile-nav"><button className="active"><Trophy/>Home</button><a href="/contacts"><Users/>Contacts</a><button className="nav-add"><Plus/></button><button><CircleDollarSign/>Funding</button><button><MoreHorizontal/>More</button></nav>
   </div>
 }
