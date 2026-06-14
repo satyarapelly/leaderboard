@@ -162,3 +162,15 @@ npx supabase db push --dry-run
 If linking reports an authentication error, rerun `npx supabase login`. If it
 reports a database authentication error, reset the database password from the
 hosted project's database settings, then rerun `supabase link`.
+
+## Enable the live application after migrations
+
+Push the latest schema with `npx supabase db push`. Migration `0003_field_operations.sql` adds field-intelligence fields, the daily planner schedule, and Realtime subscriptions.
+
+Create an application user in Supabase Authentication, then make that user the owner so the existing RLS policies allow contact and funding access:
+
+```sql
+update profiles set role = 'owner' where id = '<auth-user-uuid>';
+```
+
+Start the app with `npm run dev`, open `/contacts` or `/planner`, and sign in with that Supabase Authentication email/password. Contacts and daily plan items then read/write the hosted database and update through Realtime.
