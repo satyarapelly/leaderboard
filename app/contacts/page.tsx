@@ -1,11 +1,25 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { Archive, Check, MessageCircle, Phone, Plus, Search, UserRoundPlus, X } from "lucide-react";
+import AuthPanel from "../auth-panel";
+import { createClient } from "@/lib/supabase/client";
+
+type Contact = { id:string; name:string; phone:string; category:string; affiliation?:string; last_contact?:string; next_action?:string; next_action_date?:string; livelihood?:string; education?:string; community_group?:string; religion?:string; social_interest?:boolean; archived_at?:string };
+
 export default function ContactsPage() {
-  return (
-    <div>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: "var(--navy)" }}>Contact Pool</h1>
-      <p style={{ color: "#666", marginTop: 8 }}>
-        Build per README §5 (Contact Pool): fast capture (name, phone, category), pre-visit lookup,
-        one-tap WhatsApp/call, tags, offline. This is Milestone 3 — the priority module.
-      </p>
-    </div>
-  );
+  const supabase=createClient(); const [contacts,setContacts]=useState<Contact[]>([]); const [ready,setReady]=useState(false); const [open,setOpen]=useState(false); const [query,setQuery]=useState(""); const [toast,setToast]=useState("");
+  const [form,setForm]=useState({name:"",phone:"",category:"community_leader",livelihood:"",education:"",community_group:"",religion:"",social_interest:false});
+  const load=async()=>{const {data,error}=await supabase.from("contacts").select("*").is("archived_at",null).order("created_at",{ascending:false});setContacts((data||[]) as Contact[]);setReady(true);if(error)notify(error.message)};
+  useEffect(()=>{load();if(new URLSearchParams(location.search).has("add"))setOpen(true);const channel=supabase.channel("contacts-live").on("postgres_changes",{event:"*",schema:"public",table:"contacts"},load).subscribe();return()=>{supabase.removeChannel(channel)}},[]);
+  const notify=(message:string)=>{setToast(message);setTimeout(()=>setToast(""),2200)};
+  const visible=useMemo(()=>contacts.filter(c=>!c.archived_at&&`${c.name} ${c.phone} ${c.category} ${c.affiliation||""}`.toLowerCase().includes(query.toLowerCase())),[contacts,query]);
+  const add=async(e:React.FormEvent)=>{e.preventDefault();const {error}=await supabase.from("contacts").insert(form);if(error)notify(error.message);else{setForm({name:"",phone:"",category:"community_leader",livelihood:"",education:"",community_group:"",religion:"",social_interest:false});setOpen(false);notify("Contact saved to Supabase");load()}};
+  const touch=async(id:string)=>{const {error}=await supabase.from("contacts").update({last_contact:new Date().toISOString().slice(0,10)}).eq("id",id);notify(error?.message||"Touch logged · live data updated");load()};
+  const archive=async(id:string)=>{if(confirm("Archive this contact?")){const {error}=await supabase.from("contacts").update({archived_at:new Date().toISOString()}).eq("id",id);notify(error?.message||"Contact archived");load()}};
+  return <div className="contacts-shell"><header className="contacts-top"><a href="/" className="brand"><div className="brand-mark">M<span>28</span></div><div><strong>Mission 2028</strong><small>Command center</small></div></a><a href="/">Dashboard</a></header><main className="contacts-main"><AuthPanel/>
+    <section className="contacts-heading"><div><p className="eyebrow"><UserRoundPlus size={14}/> Contact pool</p><h1>People powering the mission</h1><p>Fast-capture a contact, log every touch, and take action in one tap.</p></div><button className="primary" onClick={()=>setOpen(true)}><Plus size={18}/> Add contact</button></section>
+    <div className="contact-toolbar"><label><Search size={17}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search name, phone, category…"/></label><b>{visible.length} active contacts</b></div>
+    <section className="contact-list">{visible.map(c=><article className="contact-card" key={c.id}><div className="contact-avatar">{c.name.split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div className="contact-info"><div><h2>{c.name}</h2><span>{c.category}</span></div><p>{c.affiliation||"No affiliation added"}</p><small>{c.last_contact?`Last touch ${c.last_contact}`:"New · no touch logged"}{c.next_action&&` · Next: ${c.next_action}`}</small></div><div className="contact-actions"><a href={`tel:${c.phone}`} aria-label="Call"><Phone size={16}/></a><a href={`https://wa.me/${c.phone}`} aria-label="WhatsApp"><MessageCircle size={16}/></a><button onClick={()=>touch(c.id)}><Check size={16}/> Log touch</button><button className="archive" onClick={()=>archive(c.id)} aria-label="Archive"><Archive size={16}/></button></div></article>)}{ready&&visible.length===0&&<div className="empty">No contacts match this view. Add the first one.</div>}</section>
+  </main>{open&&<div className="modal-backdrop" onMouseDown={()=>setOpen(false)}><form className="contact-modal" onSubmit={add} onMouseDown={e=>e.stopPropagation()}><button type="button" className="modal-close" onClick={()=>setOpen(false)}><X/></button><p className="eyebrow">Fast capture</p><h2>Add a contact</h2><label>Name<input required autoFocus value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Phone<input required type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})}/></label><label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}><option value="community_leader">Community leader</option><option value="official">Official</option><option value="donor">Donor</option><option value="corporate_csr">Corporate CSR</option><option value="media">Media</option><option value="professional">Professional</option><option value="youth_volunteer">Youth volunteer</option></select></label><label>Livelihood<input placeholder="Farmer, salaried, student…" value={form.livelihood} onChange={e=>setForm({...form,livelihood:e.target.value})}/></label><label>Education<input value={form.education} onChange={e=>setForm({...form,education:e.target.value})}/></label><label>Community / caste<input value={form.community_group} onChange={e=>setForm({...form,community_group:e.target.value})}/></label><label>Religion<input value={form.religion} onChange={e=>setForm({...form,religion:e.target.value})}/></label><label className="check-label"><input type="checkbox" checked={form.social_interest} onChange={e=>setForm({...form,social_interest:e.target.checked})}/> Willing to work for society</label><button className="primary" type="submit"><Plus size={17}/> Save contact</button><small>Saved live to Supabase. Sign in with an owner account first.</small></form></div>}{toast&&<div className="toast"><Check size={16}/>{toast}</div>}</div>
 }
