@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
 import { LogIn, LogOut } from "lucide-react";
+import { createClient, hasSupabaseConfig } from "@/lib/supabase/client";
+
+export default function AuthPanel(){
+ if(!hasSupabaseConfig()) return <div className="config-error"><strong>Supabase is not configured.</strong><span>Create <code>.env.local</code> with <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, then restart <code>npm run dev</code>.</span></div>;
 import { createClient } from "@/lib/supabase/client";
 
 export default function AuthPanel(){
