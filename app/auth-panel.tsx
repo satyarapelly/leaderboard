@@ -5,6 +5,9 @@ import { createClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
 export default function AuthPanel(){
  if(!hasSupabaseConfig()) return <div className="config-error"><strong>Supabase is not configured.</strong><span>Create <code>.env.local</code> with <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>, then restart <code>npm run dev</code>.</span></div>;
+import { createClient } from "@/lib/supabase/client";
+
+export default function AuthPanel(){
  const [email,setEmail]=useState(""); const [password,setPassword]=useState(""); const [user,setUser]=useState<string|null>(null); const [message,setMessage]=useState("");
  const supabase=createClient();
  useEffect(()=>{supabase.auth.getUser().then(({data})=>setUser(data.user?.email||null)); const {data}=supabase.auth.onAuthStateChange((_e,s)=>setUser(s?.user.email||null)); return()=>data.subscription.unsubscribe()},[]);
