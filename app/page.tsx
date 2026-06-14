@@ -62,6 +62,6 @@ export default function Dashboard() {
         </aside>
       </section>
     </main>
-    <nav className="mobile-nav"><button className="active"><Trophy/>Home</button><a href="/contacts"><Users/>Contacts</a><button className="nav-add"><Plus/></button><button><CircleDollarSign/>Funding</button><button><MoreHorizontal/>More</button></nav>
+    <nav className="mobile-nav"><button className="active"><Trophy/>Home</button><a href="/contacts"><Users/>Contacts</a><button className="nav-add"><Plus/></button><button><CircleDollarSign/>Funding</button><a href="/planner"><CalendarDays/>Plan</a></nav>
   </div>
 }
