@@ -2,7 +2,6 @@
 -- PostgreSQL / Supabase (PG15+)
 
 create extension if not exists moddatetime schema extensions;
-
 -- ---------- enums ----------
 create type location_type    as enum ('state','district','constituency','mandal','village');
 create type contact_category as enum ('official','political','elected_rep','community_leader','religious_leader','donor','corporate_csr','media','ngo','business_vendor','professional','educator','youth_volunteer','diaspora','beneficiary','friend');
@@ -17,7 +16,6 @@ create type activity_type    as enum ('visit','camp','meeting','event','travel')
 create type activity_status  as enum ('planned','done');
 create type team_status      as enum ('active','prospect','inactive');
 create type app_role         as enum ('owner','team');
-
 -- ---------- profiles (role) ----------
 create table profiles (
   id         uuid primary key references auth.users on delete cascade,
@@ -25,12 +23,10 @@ create table profiles (
   role       app_role not null default 'team',
   created_at timestamptz not null default now()
 );
-
 create or replace function is_owner() returns boolean
 language sql security definer stable set search_path = public as $$
   select exists (select 1 from profiles where id = auth.uid() and role = 'owner');
 $$;
-
 -- auto-create a profile on signup
 create or replace function handle_new_user() returns trigger
 language plpgsql security definer set search_path = public as $$
@@ -42,7 +38,6 @@ end;
 $$;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function handle_new_user();
-
 -- ---------- locations ----------
 create table locations (
   id         uuid primary key default gen_random_uuid(),
@@ -51,7 +46,6 @@ create table locations (
   parent_id  uuid references locations(id) on delete set null,
   created_at timestamptz not null default now()
 );
-
 -- ---------- team ----------
 create table team (
   id         uuid primary key default gen_random_uuid(),
@@ -64,7 +58,6 @@ create table team (
   updated_at timestamptz not null default now(),
   archived_at timestamptz
 );
-
 -- ---------- programs ----------
 create table programs (
   id                   uuid primary key default gen_random_uuid(),
@@ -83,7 +76,6 @@ create table programs (
   updated_at timestamptz not null default now(),
   archived_at timestamptz
 );
-
 -- ---------- contacts ----------
 create table contacts (
   id               uuid primary key default gen_random_uuid(),
@@ -107,7 +99,6 @@ create table contacts (
   updated_at timestamptz not null default now(),
   archived_at timestamptz
 );
-
 -- ---------- funding ----------
 create table funding (
   id                uuid primary key default gen_random_uuid(),
@@ -126,7 +117,6 @@ create table funding (
   updated_at timestamptz not null default now(),
   archived_at timestamptz
 );
-
 -- ---------- activities ----------
 create table activities (
   id          uuid primary key default gen_random_uuid(),
@@ -141,13 +131,11 @@ create table activities (
   updated_at timestamptz not null default now(),
   archived_at timestamptz
 );
-
 create table activity_contacts (
   activity_id uuid references activities(id) on delete cascade,
   contact_id  uuid references contacts(id) on delete cascade,
   primary key (activity_id, contact_id)
 );
-
 -- ---------- indexes ----------
 create index idx_contacts_location on contacts(location_id);
 create index idx_contacts_category on contacts(category);
@@ -158,14 +146,12 @@ create index idx_activities_location on activities(location_id);
 create index idx_funding_stage on funding(stage);
 create index idx_programs_status on programs(status);
 create index idx_programs_location on programs(location_id);
-
 -- ---------- updated_at triggers ----------
 create trigger t_team_upd      before update on team      for each row execute function extensions.moddatetime(updated_at);
 create trigger t_programs_upd   before update on programs   for each row execute function extensions.moddatetime(updated_at);
 create trigger t_contacts_upd   before update on contacts   for each row execute function extensions.moddatetime(updated_at);
 create trigger t_funding_upd    before update on funding    for each row execute function extensions.moddatetime(updated_at);
 create trigger t_activities_upd before update on activities for each row execute function extensions.moddatetime(updated_at);
-
 -- ---------- leaderboard view ----------
 create view mandal_coverage with (security_invoker = true) as
 select
@@ -185,7 +171,6 @@ left join ( select location_id, count(*) cnt from contacts where archived_at is 
 left join ( select location_id, count(*) cnt from activities where status='done' and archived_at is null group by location_id ) a on a.location_id = l.id
 left join ( select location_id, count(*) filter (where status='running') running, sum(beneficiaries_reached) benef from programs where archived_at is null group by location_id ) p on p.location_id = l.id
 where l.type in ('mandal','district');
-
 -- ---------- RLS ----------
 alter table profiles          enable row level security;
 alter table locations         enable row level security;
@@ -195,19 +180,15 @@ alter table contacts          enable row level security;
 alter table funding           enable row level security;
 alter table activities        enable row level security;
 alter table activity_contacts enable row level security;
-
 -- profiles: read own or owner; update own
 create policy profiles_read on profiles for select using (id = auth.uid() or is_owner());
 create policy profiles_upd  on profiles for update using (id = auth.uid());
-
 -- locations: all authenticated read; owner writes
 create policy loc_read on locations for select to authenticated using (true);
 create policy loc_write on locations for all to authenticated using (is_owner()) with check (is_owner());
-
 -- contacts + funding: OWNER ONLY (sensitive)
 create policy contacts_owner on contacts for all to authenticated using (is_owner()) with check (is_owner());
 create policy funding_owner  on funding  for all to authenticated using (is_owner()) with check (is_owner());
-
 -- programs / activities / team / join: any authenticated team member
 create policy programs_rw   on programs          for all to authenticated using (true) with check (true);
 create policy activities_rw on activities        for all to authenticated using (true) with check (true);
