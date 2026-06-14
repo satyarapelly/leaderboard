@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
 import { LogIn, LogOut } from "lucide-react";
 import { createClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
