@@ -8,5 +8,14 @@ export function createClient() {
 }
 
 export function hasSupabaseConfig() {
-  return Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  return Boolean(
+    url &&
+      key &&
+      /^https?:\/\//.test(url) &&
+      !url.includes("YOUR-PROJECT") &&
+      key !== "YOUR-ANON-KEY"
+  );
 }
