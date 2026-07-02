@@ -3,18 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { Archive, Check, MessageCircle, Phone, Plus, Search, UserRoundPlus, X } from "lucide-react";
 import AuthPanel from "../auth-panel";
-import { createClient } from "@/lib/supabase/client";
+import { createClient, hasSupabaseConfig } from "@/lib/supabase/client";
 
 type Contact = { id:string; name:string; phone:string; category:string; affiliation?:string; last_contact?:string; next_action?:string; next_action_date?:string; livelihood?:string; education?:string; community_group?:string; religion?:string; social_interest?:boolean; archived_at?:string };
 
 export default function ContactsPage() {
-  const supabase=createClient(); const [contacts,setContacts]=useState<Contact[]>([]); const [ready,setReady]=useState(false); const [open,setOpen]=useState(false); const [query,setQuery]=useState(""); const [toast,setToast]=useState("");
+  const configured=hasSupabaseConfig(); const supabase=createClient(); const [contacts,setContacts]=useState<Contact[]>([]); const [ready,setReady]=useState(false); const [open,setOpen]=useState(false); const [query,setQuery]=useState(""); const [toast,setToast]=useState("");
   const [form,setForm]=useState({name:"",phone:"",category:"community_leader",livelihood:"",education:"",community_group:"",religion:"",social_interest:false});
-  const load=async()=>{const {data,error}=await supabase.from("contacts").select("*").is("archived_at",null).order("created_at",{ascending:false});setContacts((data||[]) as Contact[]);setReady(true);if(error)notify(error.message)};
-  useEffect(()=>{load();if(new URLSearchParams(location.search).has("add"))setOpen(true);const channel=supabase.channel("contacts-live").on("postgres_changes",{event:"*",schema:"public",table:"contacts"},load).subscribe();return()=>{supabase.removeChannel(channel)}},[]);
+  const load=async()=>{if(!configured){setReady(true);return}const {data,error}=await supabase.from("contacts").select("*").is("archived_at",null).order("created_at",{ascending:false});setContacts((data||[]) as Contact[]);setReady(true);if(error)notify(error.message)};
+  useEffect(()=>{load();if(new URLSearchParams(location.search).has("add"))setOpen(true);if(!configured)return;const channel=supabase.channel("contacts-live").on("postgres_changes",{event:"*",schema:"public",table:"contacts"},load).subscribe();return()=>{supabase.removeChannel(channel)}},[]);
   const notify=(message:string)=>{setToast(message);setTimeout(()=>setToast(""),2200)};
   const visible=useMemo(()=>contacts.filter(c=>!c.archived_at&&`${c.name} ${c.phone} ${c.category} ${c.affiliation||""}`.toLowerCase().includes(query.toLowerCase())),[contacts,query]);
-  const add=async(e:React.FormEvent)=>{e.preventDefault();const {error}=await supabase.from("contacts").insert(form);if(error)notify(error.message);else{setForm({name:"",phone:"",category:"community_leader",livelihood:"",education:"",community_group:"",religion:"",social_interest:false});setOpen(false);notify("Contact saved to Supabase");load()}};
+  const add=async(e:React.FormEvent)=>{e.preventDefault();if(!configured){notify("Configure Supabase before saving contacts");return}const {error}=await supabase.from("contacts").insert(form);if(error)notify(error.message);else{setForm({name:"",phone:"",category:"community_leader",livelihood:"",education:"",community_group:"",religion:"",social_interest:false});setOpen(false);notify("Contact saved to Supabase");load()}};
   const touch=async(id:string)=>{const {error}=await supabase.from("contacts").update({last_contact:new Date().toISOString().slice(0,10)}).eq("id",id);notify(error?.message||"Touch logged · live data updated");load()};
   const archive=async(id:string)=>{if(confirm("Archive this contact?")){const {error}=await supabase.from("contacts").update({archived_at:new Date().toISOString()}).eq("id",id);notify(error?.message||"Contact archived");load()}};
   return <div className="contacts-shell"><header className="contacts-top"><a href="/" className="brand"><div className="brand-mark">M<span>28</span></div><div><strong>Mission 2028</strong><small>Command center</small></div></a><a href="/">Dashboard</a></header><main className="contacts-main"><AuthPanel/>

@@ -26,9 +26,9 @@ export default function AuthPanel() {
   if (!supabase) {
     return (
       <div className="config-error">
-        <strong>Supabase is not configured.</strong>
+        <strong>Preview mode · hosted data is unavailable</strong>
         <span>
-          To use live hosted data, copy <code>.env.example</code> to <code>.env.local</code>, add your remote project URL and anon key, then restart <code>npm run dev</code>.
+          Configure <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> in <code>.env.local</code>, then restart <code>npm run dev</code> to enable live data.
         </span>
       </div>
     );
